@@ -6,12 +6,10 @@ The other choice was the famous Structure and Interpretation of Computer Program
 
 John DeNero's Composing Programs is in the tradition of SICP but uses Python. A programming language that I was already familiar with as well as being compatible with my machine.
 
+---
+
 ## Links
 
-### Composing Programs
+- ### [Composing Programs](https://composingprograms.com/)
 
-(https://composingprograms.com/)
-
-### CS61A Lectures
-
-https://cs61a.org/
+- ### [CS61A Lectures](https://cs61a.org/)
