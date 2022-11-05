@@ -11,7 +11,9 @@
 (define lst `((1) 2 (3 4) 5))
 
 (define (duplicate lst) 
-    (if (or (null? lst) (null? (cdr lst)))
-        lst
-        (duplicate (cdr (cdr ((cons (car lst) (append (list (car lst)) (cdr lst)))))))))
+  (if (null? lst) 
+    ()
+    (cons (car lst) (cons (car lst) (duplicate (cdr lst))))
+  )   
+)
 
