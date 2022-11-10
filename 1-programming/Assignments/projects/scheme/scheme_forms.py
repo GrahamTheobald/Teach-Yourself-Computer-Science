@@ -31,21 +31,30 @@ def do_define_form(expressions, env):
     >>> scheme_eval(read_line("(f 3)"), env)
     5
     """
-    validate_form(expressions, 2)  # Checks that expressions is a list of length at least 2
+    validate_form(
+        expressions, 2)  # Checks that expressions is a list of length at least 2
     signature = expressions.first
     if scheme_symbolp(signature):
         # assigning a name to a value e.g. (define x (+ 1 2))
-        validate_form(expressions, 2, 2)  # Checks that expressions is a list of length exactly 2
+        # Checks that expressions is a list of length exactly 2
+        validate_form(expressions, 2, 2)
         # BEGIN PROBLEM 4
         "*** YOUR CODE HERE ***"
+        env.define(signature, scheme_eval(expressions.rest.first, env))
+        return signature
         # END PROBLEM 4
     elif isinstance(signature, Pair) and scheme_symbolp(signature.first):
         # defining a named procedure e.g. (define (f x y) (+ x y))
         # BEGIN PROBLEM 10
-        "*** YOUR CODE HERE ***"
+        symbol = signature.first
+        formals = signature.rest
+        lam = do_lambda_form(Pair(formals, expressions.rest), env)
+        env.define(symbol, lam)
+        return symbol
         # END PROBLEM 10
     else:
-        bad_signature = signature.first if isinstance(signature, Pair) else signature
+        bad_signature = signature.first if isinstance(
+            signature, Pair) else signature
         raise SchemeError('non-symbol: {0}'.format(bad_signature))
 
 
@@ -58,7 +67,9 @@ def do_quote_form(expressions, env):
     """
     validate_form(expressions, 1, 1)
     # BEGIN PROBLEM 5
-    "*** YOUR CODE HERE ***"
+    if isinstance(expressions, Pair):
+        return expressions.first
+    return expressions
     # END PROBLEM 5
 
 
@@ -86,7 +97,7 @@ def do_lambda_form(expressions, env):
     formals = expressions.first
     validate_formals(formals)
     # BEGIN PROBLEM 7
-    "*** YOUR CODE HERE ***"
+    return LambdaProcedure(formals, expressions.rest, env)
     # END PROBLEM 7
 
 
@@ -243,7 +254,7 @@ def do_mu_form(expressions, env):
     formals = expressions.first
     validate_formals(formals)
     # BEGIN PROBLEM 11
-    "*** YOUR CODE HERE ***"
+    return MuProcedure(formals, expressions.rest)
     # END PROBLEM 11
 
 
