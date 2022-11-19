@@ -219,10 +219,10 @@ def make_let_frame(bindings, env):
     names = vals = nil
     # BEGIN PROBLEM 14
     while bindings is not nil:
-        validate_form(bindings.first, 2)
+        validate_form(bindings.first, 2, 2)
         validate_form(bindings.first.rest, 1, 1)
         names = Pair(bindings.first.first, names)
-        vals = Pair(eval_all(bindings.first.rest, env), vals)
+        vals = Pair(scheme_eval(bindings.first.rest.first, env), vals)
         bindings = bindings.rest
     validate_formals(names)
     # END PROBLEM 14
