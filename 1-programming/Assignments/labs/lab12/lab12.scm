@@ -13,9 +13,13 @@
   (if (= 0 n) nil (cons x (replicate x (- n 1))))
 )
 
+; (define-macro (repeat-n expr n)
+;   `(if (not (= 0 ,n))
+;     (begin ,expr (repeat-n ,expr (- ,n  1))) )
+; )
+
 (define-macro (repeat-n expr n)
-  `(if (not (= 0 ,n))
-    (begin ,expr (repeat-n ,expr (- ,n  1))) )
+    (cons 'begin (replicate expr (eval n)))
 )
 
 (define
