@@ -32,7 +32,7 @@ class CodeWriter:
         self.push_default = ['push', 'default', 0]
         self.pop_default = ['pop', 'default', 0]
         self.generate_static()
-        self.function_calls = {}
+        self.function_calls = {'null': 1}
         self.active_function = 'null'
     
     def generate_static(self):
@@ -69,11 +69,12 @@ class CodeWriter:
 
     def write_file(self, directory=False):
         if directory:
-            new_file_name = f'{self.file_name}.asm'
+            new_file_name = f'{self.final_directory(self.file_name)}.asm'
         else:
             new_file_name = self.file_name.replace('.vm', '.asm')
         with open(new_file_name, 'w') as file:
             file.write('\n'.join(self.asm))
+
     
     def command_type(self, line):
         command = line[0]
@@ -98,14 +99,10 @@ class CodeWriter:
 
     def write_call(self, line):
         _, fname, args = line
-
-        self.active_function = fname
-
         if fname in self.function_calls:
             self.function_calls[fname] += 1
         else:
             self.function_calls[fname] = 1
-        
         return_label = f'ret.{self.generate_flabel(fname)}'
 
         self.asm += [f'@{return_label}', 'D=A']
@@ -139,23 +136,30 @@ class CodeWriter:
 
     def write_function(self, line):
         _, fname, lcls = line
+        self.active_function = fname
+        if fname in self.function_calls:
+            self.function_calls[fname] += 1
+        else:
+            self.function_calls[fname] = 1
         self.write_label(fname, True)
         for _ in range(int(lcls)):
             self.write_push(['push', 'constant', '0'])
 
     def write_if_goto(self, line):
         self.write_pop(self.pop_default)
-        label = f'{self.active_function}${line[1]}'
-        self.asm += ['D=A', f'@{label}', 'D;JNE']
+        self.asm += ['D=A', f'@{self.generate_label(line[1])}', 'D;JNE']
         
     def write_goto(self, line):
-        label = f'{self.active_function}${line[1]}'
-        self.asm += [f'@{label}', '0;JMP']
+        self.asm += [f'@{self.generate_label(line[1])}', '0;JMP']
 
+    def generate_label(self, name):
+        count = self.function_calls[self.active_function]
+        return f'{self.active_function}${name}.{count}' 
+        
     def write_label(self, label, function=False):
+        count = self.function_calls[self.active_function]
         if not function:
-            label = f'{self.active_function}${label}'
-
+            label = f'{self.active_function}${label}.{count}'
         self.asm.append(f'({label})')
     
     def generate_flabel(self, function):
@@ -210,7 +214,12 @@ class CodeWriter:
                 segment = 'THAT'
             self.asm += [f'@{segment}', 'D=M']
         elif location == 'static':
-            self.asm += [f'@{self.static_name}.{value}', 'D=M']
+            index = self.active_function.find('.')
+            if index != -1: 
+                clss = self.active_function[:index]
+            else:
+                clss = self.active_function
+            self.asm += [f'@{clss}${self.static_name}.{value}', 'D=M']
             
         self.asm += ['@SP', 'A=M', 'M=D', '@SP', 'M=M+1']
 
@@ -227,7 +236,12 @@ class CodeWriter:
                 segment = 'THAT'
             self.asm += ['D=A', f'@{segment}', 'M=D']
         elif location == 'static':
-            self.asm += ['D=A', f'@{self.static_name}.{value}', 'M=D']
+            index = self.active_function.find('.')
+            if index != -1: 
+                clss = self.active_function[:index]
+            else:
+                clss = self.active_function
+            self.asm += ['D=A', f'@{clss}${self.static_name}.{value}', 'M=D']
 
     def write_sub(self, push=True):
         self.write_pop(self.pop_default)
@@ -258,3 +272,12 @@ class CodeWriter:
             'M=M+1',
             ]
         self.i += 1
+    
+    def final_directory(self, vm):
+        reverse = vm[::-1]
+        index = reverse.find('/')
+        if index != -1:
+            directory = reverse[:index][::-1]
+        else:
+            directory = reverse[::-1]
+        return f'{vm}/{directory}'

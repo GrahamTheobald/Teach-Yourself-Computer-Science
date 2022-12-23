@@ -6,7 +6,7 @@ from CodeWriter import CodeWriter
 def main():
     vm = sys.argv[1]
     if is_vm(vm):
-        file_procedure  
+        file_procedure(vm)
     else:
         directory_procedure(vm)
 
@@ -37,11 +37,5 @@ def initiate():
     code_writer = CodeWriter([['call', 'Sys.init', '0']], '_', bootstrap)
     code_writer.translate()
     return code_writer.asm
-
-# def final_directory(vm):
-#     reverse = vm[::-1]
-#     index = reverse.find('/')
-#     directory = reverse[:index][::-1]
-#     return f'{vm}/{directory}'
 
 main()

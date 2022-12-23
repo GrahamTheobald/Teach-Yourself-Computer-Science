@@ -23,7 +23,7 @@ D=M
 @addr
 A=M
 M=D
-(LOOP_START)
+(null$LOOP_START.1)
 @ARG
 D=M
 @0
@@ -142,7 +142,7 @@ M=M-1
 A=M
 A=M
 D=A
-@LOOP_START
+@null$LOOP_START.1
 D;JNE
 @LCL
 D=M

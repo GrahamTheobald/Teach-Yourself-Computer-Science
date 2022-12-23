@@ -149,8 +149,8 @@ D=M
 @addr
 A=M
 M=D
-(Sys.main$LOOP)
-@Sys.main$LOOP
+(Sys.init$LOOP.1)
+@Sys.init$LOOP.1
 0;JMP
 (Sys.main)
 @0
