@@ -1,0 +1,383 @@
+function Snake.new 3
+push constant 8
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+pop local 0
+push constant 3
+pop this 1
+push constant 465
+pop this 2
+push this 2
+call Array.new 1
+pop this 0
+push constant 0
+not
+pop this 7
+push constant 25
+pop this 5
+push constant 0
+pop this 4
+push constant 3
+pop this 3
+push this 3
+pop local 2
+label WHILE_EXP0
+push local 0
+push this 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push this 1
+eq
+push constant 1
+sub
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+pop local 2
+label IF_FALSE0
+push constant 14
+push local 0
+add
+push constant 8
+push local 2
+call Segment.new 3
+pop local 1
+push local 0
+push this 0
+add
+push local 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+call Segment.draw 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+return
+function Snake.move 9
+push argument 0
+pop pointer 0
+push this 6
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+call Snake.delay 1
+pop this 6
+push constant 0
+return
+label IF_FALSE0
+push constant 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push local 1
+call Segment.getX 1
+pop local 3
+push local 1
+call Segment.getY 1
+pop local 4
+push argument 1
+push constant 1
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 3
+push constant 2
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push pointer 0
+push this 3
+call Snake.move 2
+return
+label IF_FALSE2
+push constant 0
+pop local 5
+push constant 1
+neg
+pop local 6
+label IF_FALSE1
+push argument 1
+push constant 2
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 3
+push constant 1
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push pointer 0
+push this 3
+call Snake.move 2
+return
+label IF_FALSE4
+push constant 0
+pop local 5
+push constant 1
+pop local 6
+label IF_FALSE3
+push argument 1
+push constant 3
+eq
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push this 3
+push constant 4
+eq
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push pointer 0
+push this 3
+call Snake.move 2
+return
+label IF_FALSE6
+push constant 1
+neg
+pop local 5
+push constant 0
+pop local 6
+label IF_FALSE5
+push argument 1
+push constant 4
+eq
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push this 3
+push constant 3
+eq
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push pointer 0
+push this 3
+call Snake.move 2
+return
+label IF_FALSE8
+push constant 1
+pop local 5
+push constant 0
+pop local 6
+label IF_FALSE7
+push argument 1
+pop this 3
+push local 3
+push local 5
+add
+pop local 7
+push local 4
+push local 6
+add
+pop local 8
+push local 7
+push constant 0
+lt
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push constant 30
+pop local 7
+label IF_FALSE9
+push local 7
+push constant 30
+gt
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push constant 0
+pop local 7
+label IF_FALSE10
+push local 8
+push constant 0
+lt
+if-goto IF_TRUE11
+goto IF_FALSE11
+label IF_TRUE11
+push constant 14
+pop local 8
+label IF_FALSE11
+push local 8
+push constant 14
+gt
+if-goto IF_TRUE12
+goto IF_FALSE12
+label IF_TRUE12
+push constant 0
+pop local 8
+label IF_FALSE12
+push pointer 0
+call Snake.shiftSegments 1
+pop temp 0
+push local 7
+push local 8
+push this 3
+call Segment.new 3
+pop local 0
+push constant 0
+push this 0
+add
+push local 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 0
+call Segment.draw 1
+pop temp 0
+push this 7
+not
+if-goto IF_TRUE13
+goto IF_FALSE13
+label IF_TRUE13
+push this 1
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 2
+push local 2
+call Segment.erase 1
+pop temp 0
+push local 2
+call Segment.dispose 1
+pop temp 0
+goto IF_END13
+label IF_FALSE13
+push this 1
+push constant 1
+add
+pop this 1
+label IF_END13
+push pointer 0
+call Snake.delay 1
+pop this 6
+push pointer 0
+push local 7
+push local 8
+push constant 1
+call Snake.collision 4
+return
+function Snake.delay 0
+push argument 0
+pop pointer 0
+push this 4
+push this 5
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 4
+push constant 1
+add
+pop this 4
+push constant 10
+call Sys.wait 1
+pop temp 0
+push constant 0
+not
+return
+label IF_FALSE0
+push constant 0
+pop this 4
+push constant 0
+return
+function Snake.shiftSegments 1
+push argument 0
+pop pointer 0
+push this 1
+push constant 1
+sub
+pop local 0
+label WHILE_EXP0
+push local 0
+push constant 1
+neg
+gt
+not
+if-goto WHILE_END0
+push local 0
+push constant 1
+add
+push this 0
+add
+push local 0
+push this 0
+add
+pop pointer 1
+push that 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 0
+push constant 1
+sub
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Snake.collision 4
+push argument 0
+pop pointer 0
+label WHILE_EXP0
+push argument 3
+push this 1
+lt
+not
+if-goto WHILE_END0
+push argument 3
+push this 0
+add
+pop pointer 1
+push that 0
+pop local 3
+push local 3
+call Segment.getX 1
+pop local 1
+push local 3
+call Segment.getY 1
+pop local 2
+push local 1
+push argument 1
+eq
+push argument 2
+push local 2
+eq
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+not
+return
+label IF_FALSE0
+push argument 3
+push constant 1
+add
+pop argument 3
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return

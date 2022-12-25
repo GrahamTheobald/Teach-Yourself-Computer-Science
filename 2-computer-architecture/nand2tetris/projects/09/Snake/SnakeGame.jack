@@ -1,0 +1,28 @@
+class SnakeGame {
+  field Snake snake;
+  field int direction;
+
+  constructor SnakeGame new() {
+    let snake = Snake.new();
+    let direction = 3;
+    return this;
+  }
+
+  method void run() {
+    var char key;
+    var boolean exit;
+    let key = 0;
+
+    while (~exit) {
+      let key = Keyboard.keyPressed();
+
+      if (key = 131) { let direction = 1; }   // up arrow
+      if (key = 133) { let direction = 2; }   // down arrow
+      if (key = 130) { let direction = 3; }   // left arrow
+      if (key = 132) { let direction = 4; }   // right arrow
+
+      let exit = snake.move(direction);
+    }
+    return;
+  }
+}

@@ -1,0 +1,117 @@
+class Snake {
+  field Array segments;
+  field int length, maxLength, cDir, ticks, delay;
+  field boolean moving, grow;
+
+  constructor Snake new() {
+    var int i;
+    var Segment newSeg;
+    var int d;
+    let i = 0;
+    let length = 3;
+    let maxLength = 465; // full screen 
+    let segments = Array.new(maxLength);
+    let grow = true;
+    let delay = 25;
+    let ticks = 0;
+    let cDir = 3;
+    let d = cDir;
+
+    while (i < length) {
+      if (i = length - 1) {let d = 0;}
+      let newSeg = Segment.new(14 + i, 8, d);
+      let segments[i] = newSeg;
+      do newSeg.draw();
+      let i = i + 1;
+    }
+    return this;
+  }
+
+  method boolean move(int direction) {
+    var Segment newSeg, cSeg, oldSeg;
+    var int Cx, Cy, Dx, Dy, Nx, Ny;
+    if (moving) {
+      let moving = delay();
+      return false;
+    }
+    let cSeg = segments[0];
+    let Cx = cSeg.getX();
+    let Cy = cSeg.getY();
+    if (direction = 1) {
+      if (cDir = 2) {return move(cDir);}    
+      let Dx = 0;
+      let Dy = -1;
+    }
+    if (direction = 2) {
+      if (cDir = 1) {return move(cDir);}    
+      let Dx = 0;
+      let Dy = 1;
+    }
+    if (direction = 3) { 
+      if (cDir = 4) {return move(cDir);}       
+      let Dx = -1;
+      let Dy = 0;
+    }
+    if (direction = 4) {
+      if (cDir = 3) {return move(cDir);}    
+      let Dx = 1;
+      let Dy = 0;   
+    }
+    let cDir = direction;
+    let Nx = Cx + Dx;
+    let Ny = Cy + Dy;
+    if (Nx < 0) {let Nx = 30;}
+    if (Nx > 30) {let Nx = 0;}
+    if (Ny < 0) {let Ny = 14;}
+    if (Ny > 14) {let Ny = 0;}
+    do shiftSegments();
+    let newSeg = Segment.new(Nx, Ny, cDir);
+    let segments[0] = newSeg;
+    do newSeg.draw();
+    if (~grow) {
+      let oldSeg = segments[length];
+      do oldSeg.erase();
+      do oldSeg.dispose();
+    }
+    else {
+      let length = length + 1;
+    }
+    let moving = delay(); 
+    return collision(Nx, Ny, 1);
+  }
+
+  method boolean delay() {
+    if (ticks < delay) {
+      let ticks = ticks + 1;
+      do Sys.wait(10);
+      return true;
+    }
+    let ticks = 0;
+    return false;
+  }
+
+  method void shiftSegments() {
+    var int i;
+    let i = length - 1;
+    while (i > -1) {
+      let segments[i + 1] = segments[i];
+      let i = i - 1;
+    }
+    return;
+  }
+
+  method boolean collision(int Fx, int Fy, int i) {
+    var int i, Gx, Gy;
+    var Segment otherSeg;
+    while(i < length) {
+      let otherSeg = segments[i];
+      let Gx = otherSeg.getX();
+      let Gy = otherSeg.getY();
+      if ((Gx = Fx) & (Fy = Gy)) {
+        return true;
+      }
+      let i = i + 1;
+    }
+    return false;
+  }
+}

@@ -1,0 +1,66 @@
+class Segment {
+  field int x, y, sx, sy, ex, ey, key;
+
+  constructor Segment new(int xx, int yy, int direction) {
+    let x = xx;
+    let y = yy;
+    let sx = 0;
+    let sy = 0;
+    let ex = 0;
+    let ey = 0;
+    let key = 0;
+
+    if (direction = 1) {
+      let ey = 1;
+    }
+    if (direction = 2) {
+      let sy = 1;
+    }
+    if (direction = 3) {
+      let ex = 1;
+    }
+    if (direction = 4) {
+      let sx = 1;
+    }
+    if (direction = 0) {
+      let sx = 1;
+    }
+    return this;
+  }
+
+  method void dispose() {
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method void draw() {
+    var int Sx, Sy, Ex, Ey;
+
+    let Sx = (x * 16) + 1 - sx;
+    let Sy = (y * 16) + 1 - sy;
+    let Ex = (x * 16) + 15 + ex;
+    let Ey = (y * 16) + 15 + ey;
+
+    do Screen.setColor(true);
+    do Screen.drawRectangle(Sx, Sy, Ex, Ey);
+    return;
+  }
+
+  method void erase() {
+    do Screen.setColor(false);
+    do Screen.drawRectangle(x * 16, y * 16, (x * 16) + 16, (y * 16) + 16);
+    return;
+  }
+
+  method int getX() {
+    return x;
+  }
+
+  method int getY() {
+    return y;
+  }
+
+  method void move() {
+   return;
+  }
+}
