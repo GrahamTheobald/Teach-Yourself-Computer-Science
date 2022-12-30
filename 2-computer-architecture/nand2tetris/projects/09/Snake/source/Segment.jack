@@ -1,3 +1,5 @@
+/* creates a segment which comprises the snake */
+
 class Segment {
   field int x, y, sx, sy, ex, ey, key;
 
@@ -9,6 +11,8 @@ class Segment {
     let ex = 0;
     let ey = 0;
     let key = 0;
+
+    /* these ey, sy ... variables are to offset the segment depending on the direction it was spawned in, otherwise there are gaps between each segment */
 
     if (direction = 1) {
       let ey = 1;

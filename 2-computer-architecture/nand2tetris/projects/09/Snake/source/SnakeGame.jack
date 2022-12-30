@@ -1,0 +1,76 @@
+/* creates a game of snake whereby you control a snake with the arrow keys in order to consume the circle which makes the snake grow and thereby increasing the speed of the snake.
+The run method generates a loop until the game ends upon the snake colliding with itself */
+
+class SnakeGame {
+  field Snake snake;
+  field Circle circle;
+  field int direction;
+  field boolean cRendered;
+
+  constructor SnakeGame new() {
+    let snake = Snake.new();
+    let circle = Circle.new(3, 4);
+    let cRendered = true;
+    let direction = 3;
+    return this;
+  }
+
+  method void run() {
+    var int cX, cY, nX, nY;
+    var char key;
+    var boolean exit;
+    var Array xy;
+    let key = 0;
+
+    while (~exit) {
+      let key = Keyboard.keyPressed();
+      let cX = circle.getX();
+      let cY = circle.getY();
+
+      if (key = 131) { let direction = 1; }   // up arrow
+      if (key = 133) { let direction = 2; }   // down arrow
+      if (key = 130) { let direction = 3; }   // left arrow
+      if (key = 132) { let direction = 4; }   // right arrow
+
+      */ cRendered determines whether the snake collided with the circle */
+      let cRendered = ~snake.collision(cX, cY, 0);
+
+      */ if collision occured this generates a new circle */
+      if (~cRendered) {
+        let xy = generateXY(cX, cY);
+        do circle.dispose();
+        let nX = xy[0];
+        let nY = xy[1];
+        let circle = Circle.new(nX, nY);
+      }
+     
+      do snake.setGrow(true);
+      let exit = snake.move(direction);
+   
+    }
+    return;
+  }
+
+  */ this function generates new coordinates for a circle that won't collide with the snake */
+  method Array generateXY(int oX, int oY) {
+    var int nX, nY;
+    var Array xy;
+    let nX = oX;
+    let nY = oY;
+    let xy = Array.new(2);
+    while (snake.collision(nX, nY, 0)) {
+      let nX = nX + 8;
+      let nY = nY - 4;
+      while (nX > 30) {
+        let nX = nX - 30 + 1;
+      }
+      while (nY < 0) {
+        let nY = nY + 14 - 1;
+      }
+    }
+    let xy[0] = nX;
+    let xy[1] = nY;
+    return xy;
+  }
+
+}

@@ -1,0 +1,37 @@
+/* Implements the circle which the snake must consume in order to grow */
+
+class Circle {
+  field int x, y;
+  field bool eaten;
+
+  constructor Circle new(int xx, int yy) {
+    let x = xx;
+    let y = yy;
+    let eaten = false;
+    do draw();
+    return this;
+  }
+
+  method void dispose() {
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method void draw() {
+    var int Nx, Ny, r;
+    let Nx = (x * 16) + 8;
+    let Ny = (y * 16) + 8;
+    let r = 4;
+    do Screen.setColor(true);
+    do Screen.drawCircle(Nx, Ny, r);
+    return;
+  }
+
+  method int getX() {
+    return x;
+  }
+
+  method int getY() {
+    return y;
+  }
+}

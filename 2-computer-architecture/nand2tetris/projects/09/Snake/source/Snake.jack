@@ -1,7 +1,9 @@
+/** Implements the Snake that is controlled by the player */
+
 class Snake {
   field Array segments;
   field int length, maxLength, cDir, ticks, delay;
-  field boolean moving, grow;
+  field boolean moving, grow, growing;
 
   constructor Snake new() {
     var int i;
@@ -11,7 +13,7 @@ class Snake {
     let length = 3;
     let maxLength = 465; // full screen 
     let segments = Array.new(maxLength);
-    let grow = true;
+    let grow = false;
     let delay = 25;
     let ticks = 0;
     let cDir = 3;
@@ -26,10 +28,14 @@ class Snake {
     }
     return this;
   }
-
+  /* creates motion by generating a new segment and adding it to the front before deleting the 
+  last segment (if the snake isn't growing) */
   method boolean move(int direction) {
     var Segment newSeg, cSeg, oldSeg;
     var int Cx, Cy, Dx, Dy, Nx, Ny;
+    
+    /* this check is to create the delayed motion effect without having to use Sys.wait
+    which prevents keyboard input making it impossible to change direction */ 
     if (moving) {
       let moving = delay();
       return false;
@@ -37,6 +43,9 @@ class Snake {
     let cSeg = segments[0];
     let Cx = cSeg.getX();
     let Cy = cSeg.getY();
+
+    /* this sets the coordinates for the new snake segment and prevents the direction being
+    set to its opposite and thereby ending the game */
     if (direction = 1) {
       if (cDir = 2) {return move(cDir);}    
       let Dx = 0;
@@ -60,6 +69,8 @@ class Snake {
     let cDir = direction;
     let Nx = Cx + Dx;
     let Ny = Cy + Dy;
+
+    */ this allows the snake to phase through walls and appear on the other side of the screen */
     if (Nx < 0) {let Nx = 30;}
     if (Nx > 30) {let Nx = 0;}
     if (Ny < 0) {let Ny = 14;}
@@ -68,18 +79,24 @@ class Snake {
     let newSeg = Segment.new(Nx, Ny, cDir);
     let segments[0] = newSeg;
     do newSeg.draw();
-    if (~grow) {
+
+    /* if snake isn't growing this deletes the end segment */
+    if (~growing) {
       let oldSeg = segments[length];
       do oldSeg.erase();
       do oldSeg.dispose();
     }
+    */ otherwise increases the length and lowers the delay thereby increasing the speed of the snake */
     else {
       let length = length + 1;
+      let delay = 25 - (length / 40);
     }
+    let growing = false;
     let moving = delay(); 
     return collision(Nx, Ny, 1);
   }
 
+  /* creates a delay spread across smaller fragments to enable keyboard input */
   method boolean delay() {
     if (ticks < delay) {
       let ticks = ticks + 1;
@@ -90,6 +107,7 @@ class Snake {
     return false;
   }
 
+  /* shits the segments in the array along one so that the new segment can be added to the beginning */
   method void shiftSegments() {
     var int i;
     let i = length - 1;
@@ -99,7 +117,7 @@ class Snake {
     }
     return;
   }
-
+  /* detects collision with coordinates, used to detect collision with circle or the snake's self */
   method boolean collision(int Fx, int Fy, int i) {
     var int i, Gx, Gy;
     var Segment otherSeg;
@@ -113,5 +131,11 @@ class Snake {
       let i = i + 1;
     }
     return false;
+  }
+
+  method void setGrow(boolean b) {
+    if (b) {let growing = true;}
+    if (growing) {let growing = true;}
+    return;
   }
 }
