@@ -11,10 +11,14 @@ class CompilationEngine:
     SubroutineDEC = ['constructor', 'method', 'function']
     Types = ['int', 'char', 'boolean']
     Statements = ['let', 'if', 'while', 'do', 'return']
+    OPS = ['+', '-', '*', '/', '&amp;', '|', '&lt;', '&gt;', '=']
+    UnaryOPS = ['-', '~']
+    TermTags = ['<integerConstant>', '<stringConstant>']
+    KeyWordConstants = ['true', 'false', 'null', 'this']
 
     def compile(self):
         next_token = self.inputXML.pop(0)
-        _, token , _ = next_token.split()
+        _, token , _ = self.split_tokens(next_token)
         if token  == 'class':
             self.compile_class(next_token)
     
@@ -40,7 +44,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[1][0]:
             rules[1][1] = True
             self.outputXML.append(next_token)
@@ -48,7 +52,7 @@ class CompilationEngine:
             self.error(token)
        
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[2][0]:
             rules[2][1] = True
             self.outputXML.append(next_token)
@@ -57,7 +61,7 @@ class CompilationEngine:
 
         while not rules[3][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token in rules[3][0]:
                 self.compile_class_vardec(next_token)
             elif token in rules[4][0]:
@@ -73,7 +77,7 @@ class CompilationEngine:
 
         while not rules[4][1]:       
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token in rules[4][0]:
                 self.compile_subroutine(next_token)
             elif token == rules[5][0]:
@@ -99,7 +103,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == self.TYPES['IDENTIFIER'] or token in rules[1][0]:
             rules[1][1] = True
             self.outputXML.append(next_token)
@@ -107,7 +111,7 @@ class CompilationEngine:
             self.error(token)
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[2][0]:
             rules[2][1] = True
             self.outputXML.append(next_token)
@@ -116,11 +120,11 @@ class CompilationEngine:
         
         while not rules[3][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[3][0][0]:
                 self.outputXML.append(next_token)
                 next_token = self.inputXML.pop(0)
-                tag, token, _ = next_token.split()
+                tag, token, _ = self.split_tokens(next_token)
                 if tag == rules[3][0][1]:
                     self.outputXML.append(next_token)
                 else:
@@ -150,7 +154,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
 
         if token == 'void' or token in rules[1][0] or tag == self.TYPES['IDENTIFIER']:
             rules[1][1] = True
@@ -159,7 +163,7 @@ class CompilationEngine:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[2][0]:
             rules[2][1] = True
             self.outputXML.append(next_token)
@@ -167,7 +171,7 @@ class CompilationEngine:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[3][0]:
             rules[3][1] = True
             self.outputXML.append(next_token)
@@ -177,7 +181,7 @@ class CompilationEngine:
         rules[4][1] = self.compile_parameter_list()
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[5][0]:
             rules[5][1] = True
             self.outputXML.append(next_token)
@@ -197,7 +201,7 @@ class CompilationEngine:
         ]
         self.outputXML.append(TAG['OPEN'])
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == terminator:
             rules[0][1] = rules[1][1] = rules[2][1] = True
             self.inputXML.insert(0, next_token)
@@ -210,7 +214,7 @@ class CompilationEngine:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[1][0]:
             rules[1][1] = True
             self.outputXML.append(next_token)
@@ -219,18 +223,18 @@ class CompilationEngine:
 
         while not rules[2][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == terminator:
                 self.inputXML.insert(0, next_token)
                 rules[2][1] = True
             elif token == rules[2][0][0]:
                 self.outputXML.append(next_token)
                 next_token = self.inputXML.pop(0)
-                tag, token, _ = next_token.split()
+                tag, token, _ = self.split_tokens(next_token)
                 if token in rules[2][0][1] or tag == self.TYPES['IDENTIFIER']:
                     self.outputXML.append(next_token)
                     next_token = self.inputXML.pop(0)
-                    tag, token, _ = next_token.split()
+                    tag, token, _ = self.split_tokens(next_token)
                     if tag == rules[2][0][2]:
                         self.outputXML.append(next_token)
                     else:
@@ -261,7 +265,7 @@ class CompilationEngine:
         self.outputXML.append(TAG['OPEN'])
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[0][0]:
             rules[0][1] = True
             self.outputXML.append(next_token)
@@ -270,7 +274,7 @@ class CompilationEngine:
         
         while not rules[1][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == 'var':
                 self.compile_var_dec(next_token)
             else:
@@ -280,7 +284,7 @@ class CompilationEngine:
         rules[2][1] = self.compile_statements(rules[3][0])
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[3][0]:
             rules[3][1] = True
             self.outputXML.append(next_token)
@@ -301,7 +305,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token in rules[1][0] or tag == self.TYPES['IDENTIFIER']:
             rules [1][1] = True
             self.outputXML.append(next_token)
@@ -309,7 +313,7 @@ class CompilationEngine:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[2][0]:
             rules [2][1] = True
             self.outputXML.append(next_token)
@@ -318,14 +322,14 @@ class CompilationEngine:
         
         while not rules[3][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[4][0]:
                 rules[3][1] = True
                 rules[4][1] = True
             elif token == rules[3][0][0]:
                 self.outputXML.append(next_token)
                 next_token = self.inputXML.pop(0)
-                tag, token, _ = next_token.split()
+                tag, token, _ = self.split_tokens(next_token)
                 if tag == rules[3][0][1]:
                     self.outputXML.append(next_token)
                 else:
@@ -347,7 +351,7 @@ class CompilationEngine:
 
         while not rules[0][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[1][0]:
                 rules[0][1] = rules[1][1] = True
                 self.inputXML.insert(0, next_token)
@@ -382,7 +386,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[1][0]:
             rules[1][1] = True;
             self.outputXML.append(next_token)
@@ -390,12 +394,12 @@ class CompilationEngine:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[2][0][0]:
             self.outputXML.append(next_token)
             self.compile_expression()
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[2][0][2]:
                 rules[2][1] = True
                 self.outputXML.append(next_token)
@@ -409,7 +413,7 @@ class CompilationEngine:
         
         if not rules[3][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[3][0]:
                 rules[2][1] = rules[3][1] = True
                 self.outputXML.append(next_token)
@@ -419,7 +423,7 @@ class CompilationEngine:
         rules[4][1] = self.compile_expression()
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[5][0]:
             rules[5][1] = True
             self.outputXML.append(next_token)
@@ -447,7 +451,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[1][0]:
             rules[1][1] = True
             self.outputXML.append(next_token)
@@ -457,7 +461,7 @@ class CompilationEngine:
         rules[2][1] = self.compile_expression()
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[3][0]:
             rules[3][1] = True
             self.outputXML.append(next_token)
@@ -465,7 +469,7 @@ class CompilationEngine:
             self.error(next_token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[4][0]:
             rules[4][1] = True
             self.outputXML.append(next_token)
@@ -475,7 +479,7 @@ class CompilationEngine:
         rules[5][1] = self.compile_statements(rules[6][0])
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[6][0]:
             rules[6][1] = True
             self.outputXML.append(next_token)
@@ -483,18 +487,18 @@ class CompilationEngine:
             self.error(next_token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[7][0]:
             rules[7][1] = True
             self.outputXML.append(next_token)
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[8][0]:
                 rules[8][1] = True
                 self.outputXML.append(next_token)
                 rules[9][1] = self.compile_statements(rules[10][0])
                 next_token = self.inputXML.pop(0)
-                tag, token, _ = next_token.split()
+                tag, token, _ = self.split_tokens(next_token)
                 if token == rules[10][0]:
                     rules[10][1] = True
                     self.outputXML.append(next_token)
@@ -524,7 +528,7 @@ class CompilationEngine:
         self.outputXML.append(next_token)
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[1][0]:
             rules[1][1] = True
             self.outputXML.append(next_token)
@@ -534,7 +538,7 @@ class CompilationEngine:
         rules[2][1] = self.compile_expression()
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[3][0]:
             rules[3][1] = True
             self.outputXML.append(next_token)
@@ -542,7 +546,7 @@ class CompilationEngine:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[4][0]:
             rules[4][1] = True
             self.outputXML.append(next_token)
@@ -552,7 +556,7 @@ class CompilationEngine:
         rules[5][1] = self.compile_statements(rules[6][0])
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[6][0]:
             rules[6][1] = True
             self.outputXML.append(next_token)
@@ -574,7 +578,7 @@ class CompilationEngine:
         rules[1][1] = self.compile_subroutine_call()
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[2][0]:
             rules[2][1] = True
             self.outputXML.append(next_token)
@@ -594,7 +598,7 @@ class CompilationEngine:
         self.outputXML.append(TAG['OPEN'])
         self.outputXML.append(next_token)
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[2][0]:
             rules[1][1] = rules[2][1] = True
             self.outputXML.append(next_token)
@@ -602,7 +606,7 @@ class CompilationEngine:
             self.inputXML.insert(0, next_token)
             rules[1][1] = self.compile_expression()
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[2][0]:
                 rules[2][1] = True
                 self.outputXML.append(next_token)
@@ -620,18 +624,18 @@ class CompilationEngine:
             [')', False]
         ]
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if tag == rules[0][0][0]:
             self.outputXML.append(next_token)
         else:
             self.error(token)
         
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[0][0][1]:
             self.outputXML.append(next_token)
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if tag == rules[0][0][2]:
                 rules[0][1] = True
                 self.outputXML.append(next_token)
@@ -645,7 +649,7 @@ class CompilationEngine:
         
         if not rules[1][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[1][0]:
                 self.outputXML.append(next_token)
             else:
@@ -654,7 +658,7 @@ class CompilationEngine:
         self.compile_expression_list(rules[3][0])
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         if token == rules[3][0]:
             rules[3][1] = True
             self.outputXML.append(next_token)
@@ -672,7 +676,7 @@ class CompilationEngine:
         self.outputXML.append(TAG['OPEN'])
 
         next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
+        tag, token, _ = self.split_tokens(next_token)
         self.inputXML.insert(0, next_token)
 
         if token == terminator:
@@ -682,7 +686,7 @@ class CompilationEngine:
 
         while not rules[1][1]:
             next_token = self.inputXML.pop(0)
-            tag, token, _ = next_token.split()
+            tag, token, _ = self.split_tokens(next_token)
             if token == rules[1][0][0]:
                 self.outputXML.append(next_token)
                 self.compile_expression()
@@ -697,18 +701,101 @@ class CompilationEngine:
 
     def compile_expression(self):
         TAG = {'OPEN': '<expression>', 'CLOSE': '</expression>'}
+        rules = [ 
+            ['TERM', False],
+            [[self.OPS, 'TERM'], False]
+        ]
         self.outputXML.append(TAG['OPEN'])
-        next_token = self.inputXML.pop(0)
-        tag, token, _ = next_token.split()
-        self.compile_term(next_token)
-        self.outputXML.append(TAG['CLOSE'])
-        return True
+        rules[0][1] = self.compile_term()
+        while not rules[1][1]:
+            next_token = self.inputXML.pop(0)
+            tag, token, _ = self.split_tokens(next_token)
+            if token in rules[1][0][0]:
+                self.outputXML.append(next_token)
+                self.compile_term()
+                next_token = self.inputXML.pop(0)
+                tag, token, _ = self.split_tokens(next_token)
+                self.inputXML.insert(0, next_token)
+                if token not in rules[1][0][0]:
+                    rules[1][1] = True
+            else:
+                rules[1][1] = True
+                self.inputXML.insert(0, next_token)
 
-    def compile_term(self, next_token):
+        self.outputXML.append(TAG['CLOSE'])
+        return all(x[1] for x in rules)
+
+    def compile_term(self):
         TAG = {'OPEN': '<term>', 'CLOSE': '</term>'}
         self.outputXML.append(TAG['OPEN'])
-        self.outputXML.append(next_token)
-        self.outputXML.append(TAG['CLOSE'])
+        next_token = self.inputXML.pop(0)
+        tag, token, _ = self.split_tokens(next_token)
+
+        if tag in self.TermTags:
+            self.outputXML.append(next_token)
+            self.outputXML.append(TAG['CLOSE'])
+            return True
+        elif token in self.KeyWordConstants:
+            self.outputXML.append(next_token)
+            self.outputXML.append(TAG['CLOSE'])
+            return True
+        elif token in self.UnaryOPS:
+            self.outputXML.append(next_token)
+            self.compile_term()
+            self.outputXML.append(TAG['CLOSE'])
+            return True
+        elif token == '(':
+            self.outputXML.append(next_token)
+            self.compile_expression()
+            next_token = self.inputXML.pop(0)
+            tag, token, _ = self.split_tokens(next_token)
+            if token == ')':
+                self.outputXML.append(next_token)
+                self.outputXML.append(TAG['CLOSE'])
+                return True
+            else:
+                self.error(token)
+        elif tag == self.TYPES['IDENTIFIER']:
+            first_token = next_token
+            next_token = self.inputXML.pop(0)
+            tag, token, _ = self.split_tokens(next_token)
+            if token == '[':
+                self.outputXML.append(first_token)
+                self.outputXML.append(next_token)
+                self.compile_expression()
+                next_token = self.inputXML.pop(0)
+                tag, token, _ = self.split_tokens(next_token)
+                if token == ']':
+                    self.outputXML.append(next_token)
+                    self.outputXML.append(TAG['CLOSE'])
+                    return True
+                else:
+                    self.error(token)
+            elif token == '.':
+                self.inputXML.insert(0, next_token)
+                self.inputXML.insert(0, first_token)
+                self.compile_subroutine_call()
+                self.outputXML.append(TAG['CLOSE'])
+                return True
+            else:
+                self.inputXML.insert(0, next_token)
+                self.outputXML.append(first_token)
+                self.outputXML.append(TAG['CLOSE'])
+                return True
+        else:
+            self.error(token)
+
+    def split_tokens(self, token):
+        if 'stringConstant' in token:
+            arr = token.split()
+            tag = arr[0]
+            _ = arr[-1]
+            token = ' '.join(arr[1:-2])
+            arr = [tag]+[token]+[_]
+            return arr
+        else:
+            return token.split()
+        
 
     def error(self, token):
         print(f'Invalid token ({token}) encountered.')
