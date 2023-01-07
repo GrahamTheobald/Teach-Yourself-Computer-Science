@@ -1,4 +1,5 @@
 from SymbolTable import SymbolTable
+from VMWriter import VMWriter
 
 class CompilationEngine:
     def __init__(self, input):
@@ -6,6 +7,18 @@ class CompilationEngine:
         self.inputXML = input
         self.outputXML = []
         self.symbolTable = SymbolTable()
+        self.VMWriter = VMWriter()
+        self.className = ''
+        self.subroutine = {
+            'name': '',
+            'nargs': 0,
+            'void': False,
+            'constructor': False,
+            'method': False
+        }
+        self.unaryOp = None
+        self.op = []
+        self.label_count = 0
 
     TYPES = {'KEYWORD': '<keyword>', 'SYMBOL': '<symbol>', 'IDENTIFIER': '<identifier>', 
     'INT_CONST': '<integerConstant>', 'STRING_CONST': '<stringConstant>'}
@@ -21,8 +34,6 @@ class CompilationEngine:
 
     SymbolTableTags = {'var': '<var/>', 'arg': '<argument/>', 'static': '<static/>', 
             'field': '<field/>', 'class': '<class/>', 'subroutine': '<subroutine/>'}
-    ClassTableCount = {}
-    SubroutineTableCount = {}
     
 
     def compile(self):
@@ -30,10 +41,13 @@ class CompilationEngine:
         _, token , _ = self.split_tokens(next_token)
         if token  == 'class':
             self.compile_class(next_token)
+        
     
     def write_file(self, file_name):
-        with open(file_name, 'w') as file:
+        with open(f'{file_name}.xml', 'w') as file:
             file.write('\n'.join(self.outputXML))
+        
+        self.VMWriter.write_file(file_name)
         
     def compile_class(self, next_token):
         '''
@@ -49,8 +63,6 @@ class CompilationEngine:
             ['}', False],
         ]
 
-        self.ClassTableCount = {}
-
         self.outputXML.append(TAG['OPEN'])
         self.outputXML.append(next_token)
         
@@ -59,6 +71,7 @@ class CompilationEngine:
         if tag == rules[1][0]:
             rules[1][1] = True
             next__token = self.compile_identifier(token, 'class', 'class')
+            self.className = token
             self.outputXML.append(next__token)
         else:
             self.error(token)
@@ -167,9 +180,21 @@ class CompilationEngine:
             ['SUBROUTINE_BODY', False]
         ]
 
-        self.SubroutineTableCount = {}
+        self.symbolTable.start_subroutine()
+        self.subroutine['void'] = False
 
         self.outputXML.append(TAG['OPEN'])
+        tag, token, _ = self.split_tokens(next_token)
+        if token == 'method':
+            self.subroutine['method'] = True
+            self.subroutine['contructor'] = False
+        elif token == 'contructor':
+            self.subroutine['method'] = False
+            self.subroutine['contructor'] = True
+        else:
+            self.subroutine['method'] = False
+            self.subroutine['contructor'] = False
+
         self.outputXML.append(next_token)
 
         next_token = self.inputXML.pop(0)
@@ -180,6 +205,8 @@ class CompilationEngine:
             if tag == self.TYPES['IDENTIFIER']:
                 next__token = self.use_identifier(token, True)
                 self.outputXML.append(next__token)
+            elif token == 'void':
+                self.subroutine['void'] = True
             else:
                 self.outputXML.append(next_token)
         else:
@@ -190,6 +217,7 @@ class CompilationEngine:
         if tag == rules[2][0]:
             rules[2][1] = True
             next__token = self.compile_identifier(token, 'subroutine', 'subroutine')
+            self.subroutine['name'] = token
             self.outputXML.append(next__token)
         else:
             self.error(token)
@@ -211,8 +239,16 @@ class CompilationEngine:
             self.outputXML.append(next_token)
         else:
             self.error(token)
+    
 
         rules[6][1] = self.compile_subroutine_body()
+
+        print(self.subroutine['name'])
+        print('\n\n\n')
+        for x in self.symbolTable.subroutine_table:
+            print(x)
+
+        
 
         self.outputXML.append(TAG['CLOSE'])
 
@@ -328,6 +364,13 @@ class CompilationEngine:
             else:
                 rules[1][1] = True
                 self.inputXML.insert(0, next_token)
+        
+        # WRITE VM FOR FUNCTION CALL
+        fname = f"{self.className}.{self.subroutine['name']}"
+        nlocals = self.symbolTable.var_count('var')
+        if self.subroutine['method']:
+            nlocals += 1
+        self.VMWriter.write_function(fname, nlocals)
 
         rules[2][1] = self.compile_statements(rules[3][0])
 
@@ -436,11 +479,18 @@ class CompilationEngine:
         self.outputXML.append(TAG['OPEN'])
         self.outputXML.append(next_token)
 
+        let = {
+            'name': '',
+            'array': False,
+            'index': 0
+        }
+
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
         if tag == rules[1][0]:
             rules[1][1] = True;
             next__token = self.use_identifier(token)
+            let['name'] = token
             self.outputXML.append(next__token)
         else:
             self.error(token)
@@ -482,6 +532,14 @@ class CompilationEngine:
         else:
             self.error(token)
         
+        let_kind = self.symbolTable.kind_of(let['name'])
+        let_index = self.symbolTable.index_of(let['name'])
+        if let_kind == 'var':
+            segment = 'local'
+        elif let_kind == 'arg':
+            segment = 'argument'
+        
+        self.VMWriter.write_pop(segment, let_index)
         self.outputXML.append(TAG['CLOSE'])
 
     def compile_if(self, next_token):
@@ -579,6 +637,10 @@ class CompilationEngine:
         self.outputXML.append(TAG['OPEN'])
         self.outputXML.append(next_token)
 
+        label1 = self.write_label()
+        label2 = self.write_label()
+        self.VMWriter.write_label(label1)
+
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
         if token == rules[1][0]:
@@ -588,6 +650,9 @@ class CompilationEngine:
             self.error(token)
         
         rules[2][1] = self.compile_expression()
+
+        self.VMWriter.write_arithmetic('neg')
+        self.VMWriter.write_if_goto(label2)
 
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
@@ -607,6 +672,8 @@ class CompilationEngine:
         
         rules[5][1] = self.compile_statements(rules[6][0])
 
+        self.VMWriter.write_goto(label1)
+
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
         if token == rules[6][0]:
@@ -615,6 +682,7 @@ class CompilationEngine:
         else:
             self.error(token)
         
+        self.VMWriter.write_label(label2)
         self.outputXML.append(TAG['CLOSE'])
         return all(x[1] for x in rules)
 
@@ -665,6 +733,8 @@ class CompilationEngine:
             else:
                 self.error(token)
 
+        self.VMWriter.write_return(self.subroutine['void'])
+        self.subroutine['void'] = False
         self.outputXML.append(TAG['CLOSE'])
         return all(x[1] for x in rules)
         
@@ -678,6 +748,7 @@ class CompilationEngine:
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
         if tag == rules[0][0][0]:
+            self.subroutine['name'] = token
             next__token = self.use_identifier(token, True)
             self.outputXML.append(next__token)
         else:
@@ -687,10 +758,12 @@ class CompilationEngine:
         tag, token, _ = self.split_tokens(next_token)
         if token == rules[0][0][1]:
             self.outputXML.append(next_token)
+            self.subroutine['name'] += token
             next_token = self.inputXML.pop(0)
             tag, token, _ = self.split_tokens(next_token)
             if tag == rules[0][0][2]:
                 rules[0][1] = True
+                self.subroutine['name'] += token
                 next__token = self.use_identifier(token, True)
                 self.outputXML.append(next__token)
             else:
@@ -718,7 +791,8 @@ class CompilationEngine:
             self.outputXML.append(next_token)
         else:
             self.error(token)
-        
+
+        self.VMWriter.write_call(self.subroutine['name'], self.subroutine['nargs'])
         return all(x[1] for x in rules)
 
     def compile_expression_list(self, terminator):
@@ -728,6 +802,7 @@ class CompilationEngine:
             [[',', 'EXPRESSION'], False]
         ]
         self.outputXML.append(TAG['OPEN'])
+        self.subroutine['nargs'] = 0
 
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
@@ -736,6 +811,7 @@ class CompilationEngine:
         if token == terminator:
             rules[0][1] = rules[1][1] = True
         else:
+            self.subroutine['nargs'] += 1
             rules[0][1] = self.compile_expression()
 
         while not rules[1][1]:
@@ -743,6 +819,7 @@ class CompilationEngine:
             tag, token, _ = self.split_tokens(next_token)
             if token == rules[1][0][0]:
                 self.outputXML.append(next_token)
+                self.subroutine['nargs'] += 1    
                 self.compile_expression()
             elif token == terminator:
                 rules[1][1] = True
@@ -766,7 +843,11 @@ class CompilationEngine:
             tag, token, _ = self.split_tokens(next_token)
             if token in rules[1][0][0]:
                 self.outputXML.append(next_token)
+                # OP
+                self.op.append(token)
                 self.compile_term()
+                # WRITE OP 
+                self.VMWriter.write_arithmetic(self.op.pop())
                 next_token = self.inputXML.pop(0)
                 tag, token, _ = self.split_tokens(next_token)
                 self.inputXML.insert(0, next_token)
@@ -785,17 +866,36 @@ class CompilationEngine:
         next_token = self.inputXML.pop(0)
         tag, token, _ = self.split_tokens(next_token)
 
+        unary_op = False
+
         if tag in self.TermTags:
             self.outputXML.append(next_token)
+            if tag == '<integerConstant>':
+                self.VMWriter.write_push('constant', token)
             self.outputXML.append(TAG['CLOSE'])
             return True
         elif token in self.KeyWordConstants:
+            if token == 'true':
+                self.VMWriter.write_push('constant', '1')
+                self.VMWriter.write_arithmetic('neg')
+            elif token in ['false', 'null']:
+                self.VMWriter.write_push('constant', '0')
+            elif token == 'this':
+                #TODO
+                0
+
             self.outputXML.append(next_token)
             self.outputXML.append(TAG['CLOSE'])
             return True
         elif token in self.UnaryOPS:
             self.outputXML.append(next_token)
+            if token == '-':
+                unaryOp = 'neg'
+            else:
+                unaryOp = token
             self.compile_term()
+            self.VMWriter.write_arithmetic(unaryOp)
+            unaryOp = None
             self.outputXML.append(TAG['CLOSE'])
             return True
         elif token == '(':
@@ -836,6 +936,16 @@ class CompilationEngine:
                 self.inputXML.insert(0, next_token)
                 tag, token, _ = self.split_tokens(first_token)
                 next__token = self.use_identifier(token)
+
+                let_kind = self.symbolTable.kind_of(token)
+                let_index = self.symbolTable.index_of(token)
+                if let_kind == 'var':
+                    segment = 'local'
+                elif let_kind == 'arg':
+                    segment = 'argument'
+        
+                self.VMWriter.write_push(segment, let_index)
+
                 self.outputXML.append(next__token)
                 self.outputXML.append(TAG['CLOSE'])
                 return True
@@ -856,6 +966,12 @@ class CompilationEngine:
 
     def error(self, token):
         print(f'Invalid token ({token}) encountered.')
+
+    def write_label(self):
+        label = f'label{self.label_count}'
+        self.label_count += 1
+        return label
+
 
         
     

@@ -14,7 +14,7 @@ def main():
                 txml = tokeniser.xml[1:-1]
                 compilation_engine = CompilationEngine(txml)
                 compilation_engine.compile()
-                file_name = file_name[:-5]+'.xml'
+                file_name = file_name[:-5]
                 compilation_engine.write_file(file_name)
 
 def is_jackfile(str):
